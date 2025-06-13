@@ -528,8 +528,8 @@ class WifiUtil:
     def _wlan_open_handle(
         self,
         client_version: DWORD,
-        _nego_version: _Pointer[DWORD],
-        handle: _Pointer[HANDLE],
+        _nego_version: "POINTER[DWORD]",
+        handle: "POINTER[HANDLE]",
     ) -> DWORD:
         func = native_wifi.WlanOpenHandle
         func.argtypes = [DWORD, c_void_p, POINTER(DWORD), POINTER(HANDLE)]
@@ -545,7 +545,7 @@ class WifiUtil:
     def _wlan_enum_interfaces(
         self,
         handle: HANDLE,
-        ifaces: _Pointer[_Pointer[WLAN_INTERFACE_INFO_LIST]],
+        ifaces: "POINTER[POINTER[WLAN_INTERFACE_INFO_LIST]]",
     ) -> DWORD:
         func = native_wifi.WlanEnumInterfaces
         func.argtypes = [HANDLE, c_void_p, POINTER(POINTER(WLAN_INTERFACE_INFO_LIST))]
@@ -555,8 +555,8 @@ class WifiUtil:
     def _wlan_get_available_network_list(
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
-        network_list: _Pointer[_Pointer[WLAN_AVAILABLE_NETWORK_LIST]],
+        iface_guid: "POINTER[GUID]",
+        network_list: "POINTER[POINTER[WLAN_AVAILABLE_NETWORK_LIST]]",
     ) -> DWORD:
         func = native_wifi.WlanGetAvailableNetworkList
         func.argtypes = [
@@ -572,9 +572,9 @@ class WifiUtil:
     def _wlan_get_network_bss_list(
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
-        bss_list: _Pointer[_Pointer[WLAN_BSS_LIST]],
-        ssid: _Pointer[DOT11_SSID] | None = None,
+        iface_guid: "POINTER[GUID]",
+        bss_list: "POINTER[POINTER[WLAN_BSS_LIST]]",
+        ssid: "POINTER[DOT11_SSID] | None" = None,
         security: c_bool = False,  # noqa: FBT002
     ) -> DWORD:
         func = native_wifi.WlanGetNetworkBssList
@@ -590,7 +590,7 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, ssid, 1, security, None, bss_list)
 
-    def _wlan_scan(self, handle: HANDLE, iface_guid: _Pointer[GUID]) -> DWORD:
+    def _wlan_scan(self, handle: HANDLE, iface_guid: "POINTER[GUID]") -> DWORD:
         func = native_wifi.WlanScan
         func.argtypes = [
             HANDLE,
@@ -605,8 +605,8 @@ class WifiUtil:
     def _wlan_connect(
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
-        params: _Pointer[WLAN_CONNECTION_PARAMETERS],
+        iface_guid: "POINTER[GUID]",
+        params: "POINTER[WLAN_CONNECTION_PARAMETERS]",
     ) -> DWORD:
         func = native_wifi.WlanConnect
         func.argtypes = [
@@ -621,10 +621,10 @@ class WifiUtil:
     def _wlan_set_profile(
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
+        iface_guid: "POINTER[GUID]",
         xml: c_wchar_p,
         overwrite: c_bool,
-        reason_code: _Pointer[DWORD],
+        reason_code: "POINTER[DWORD]",
     ) -> DWORD:
         func = native_wifi.WlanSetProfile
         func.argtypes = [
@@ -644,7 +644,7 @@ class WifiUtil:
         self,
         reason_code: DWORD,
         buf_size: DWORD,
-        buf: _Pointer[c_wchar],
+        buf: "POINTER[c_wchar]",
     ) -> DWORD:
         func = native_wifi.WlanReasonCodeToString
         func.argtypes = [DWORD, DWORD, PWCHAR, c_void_p]
@@ -654,8 +654,8 @@ class WifiUtil:
     def _wlan_get_profile_list(
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
-        profile_list: _Pointer[_Pointer[WLAN_PROFILE_INFO_LIST]],
+        iface_guid: "POINTER[GUID]",
+        profile_list: "POINTER[POINTER[WLAN_PROFILE_INFO_LIST]]",
     ) -> DWORD:
         func = native_wifi.WlanGetProfileList
         func.argtypes = [
@@ -670,11 +670,11 @@ class WifiUtil:
     def _wlan_get_profile(  # noqa: PLR0913
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
+        iface_guid: "POINTER[GUID]",
         profile_name: c_wchar_p,
-        xml: _Pointer[c_wchar_p],
-        flags: _Pointer[DWORD],
-        access: _Pointer[DWORD],
+        xml: "POINTER[c_wchar_p]",
+        flags: "POINTER[DWORD]",
+        access: "POINTER[DWORD]",
     ) -> DWORD:
         func = native_wifi.WlanGetProfile
         func.argtypes = [
@@ -703,11 +703,11 @@ class WifiUtil:
     def _wlan_query_interface(  # noqa: PLR0913
         self,
         handle: HANDLE,
-        iface_guid: _Pointer[GUID],
+        iface_guid: "POINTER[GUID]",
         opcode: DWORD,
-        data_size: _Pointer[DWORD],
-        data: _Pointer[_Pointer[DWORD]],
-        opcode_value_type: _Pointer[DWORD],
+        data_size: "POINTER[DWORD]",
+        data: "POINTER[POINTER[DWORD]]",
+        opcode_value_type: "POINTER[DWORD]",
     ) -> DWORD:
         func = native_wifi.WlanQueryInterface
         func.argtypes = [
@@ -730,7 +730,7 @@ class WifiUtil:
             opcode_value_type,
         )
 
-    def _wlan_disconnect(self, handle: HANDLE, iface_guid: _Pointer[GUID]) -> DWORD:
+    def _wlan_disconnect(self, handle: HANDLE, iface_guid: "POINTER[GUID]") -> DWORD:
         func = native_wifi.WlanDisconnect
         func.argtypes = [HANDLE, POINTER(GUID), c_void_p]
         func.restypes = [DWORD]
