@@ -9,16 +9,15 @@ folder (e.g. linux, win, and osx). So, PyWiFi class is just the
 entry point to manipulate wifi devices.
 """
 
-import platform
 import logging
+import platform
 
 from .iface import Interface
 
-
-if platform.system().lower() == 'windows':
-    from . import _wifiutil_win as wifiutil
-elif platform.system().lower() == 'linux':
-    from . import _wifiutil_linux as wifiutil
+if platform.system().lower() == "windows":
+    from pywifi import _wifiutil_win as wifiutil
+elif platform.system().lower() == "linux":
+    from pywifi import _wifiutil_linux as wifiutil
 else:
     raise NotImplementedError
 
@@ -30,8 +29,7 @@ class PyWiFi:
     _logger = None
 
     def __init__(self):
-        
-        self._logger = logging.getLogger('pywifi')
+        self._logger = logging.getLogger("pywifi")
 
     def interfaces(self):
         """Collect the available wlan interfaces."""

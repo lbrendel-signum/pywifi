@@ -3,7 +3,7 @@
 
 """Define WiFi Profile."""
 
-from pywifi.const import AUTH_ALG_OPEN, AKM_TYPE_NONE, CIPHER_TYPE_NONE
+from pywifi.const import AKM_TYPE_NONE, AUTH_ALG_OPEN, CIPHER_TYPE_NONE
 
 
 class Profile:
