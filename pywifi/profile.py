@@ -3,13 +3,11 @@
 
 """Define WiFi Profile."""
 
-from .const import *
+from pywifi.const import AUTH_ALG_OPEN, AKM_TYPE_NONE, CIPHER_TYPE_NONE
 
 
-class Profile():
-
+class Profile:
     def __init__(self):
-
         self.id = 0
         self.auth = AUTH_ALG_OPEN
         self.akm = [AKM_TYPE_NONE]
@@ -19,12 +17,10 @@ class Profile():
         self.key = None
 
     def process_akm(self):
-
         if len(self.akm) > 1:
             self.akm = self.akm[-1:]
 
     def __eq__(self, profile):
-
         if profile.ssid:
             if profile.ssid != self.ssid:
                 return False
@@ -34,7 +30,7 @@ class Profile():
                 return False
 
         if profile.auth:
-            if profile.auth!= self.auth:
+            if profile.auth != self.auth:
                 return False
 
         if profile.cipher:

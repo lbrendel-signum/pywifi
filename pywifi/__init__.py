@@ -10,10 +10,11 @@ This library is made for manipulating wifi device on varient platforms.
 
 import logging
 
-from . import const 
-from .profile import Profile
-from .wifi import PyWiFi
+from pywifi import const
+from pywifi.profile import Profile
+from pywifi.wifi import PyWiFi
 
+__all__ = ["Profile", "PyWiFi"]
 
 def set_loglevel(level=logging.NOTSET):
 
