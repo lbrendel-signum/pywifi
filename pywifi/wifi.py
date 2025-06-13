@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
-"""
-wifi - entry module of pywifi libary.
+"""wifi - entry module of pywifi libary.
 
 We put the fundamental implementation of wifi functions in each OS
 folder (e.g. linux, win, and osx). So, PyWiFi class is just the
@@ -12,7 +10,7 @@ entry point to manipulate wifi devices.
 import logging
 import platform
 
-from .iface import Interface
+from pywifi.iface import Interface
 
 if platform.system().lower() == "windows":
     from pywifi import _wifiutil_win as wifiutil
@@ -28,12 +26,12 @@ class PyWiFi:
     _ifaces = []
     _logger = None
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Create PyWiFi instance"""
         self._logger = logging.getLogger("pywifi")
 
-    def interfaces(self):
+    def interfaces(self) -> list[Interface]:
         """Collect the available wlan interfaces."""
-
         self._ifaces = []
         wifi_ctrl = wifiutil.WifiUtil()
 

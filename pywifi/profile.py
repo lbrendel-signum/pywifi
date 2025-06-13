@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
 """Define WiFi Profile."""
 
@@ -7,38 +6,34 @@ from pywifi.const import AKM_TYPE_NONE, AUTH_ALG_OPEN, CIPHER_TYPE_NONE
 
 
 class Profile:
-    def __init__(self):
-        self.id = 0
-        self.auth = AUTH_ALG_OPEN
-        self.akm = [AKM_TYPE_NONE]
-        self.cipher = CIPHER_TYPE_NONE
-        self.ssid = None
-        self.bssid = None
-        self.key = None
+    """Definition of a Wifi profile"""
 
-    def process_akm(self):
+    def __init__(self) -> None:
+        """Create instance of a wifi profile"""
+        self.id = 0
+        self.auth: int = AUTH_ALG_OPEN
+        self.akm: list[int] = [AKM_TYPE_NONE]
+        self.cipher: int = CIPHER_TYPE_NONE
+        self.ssid: str = None
+        self.bssid: str = None
+        self.key: str = None
+
+    def process_akm(self) -> None:
         if len(self.akm) > 1:
             self.akm = self.akm[-1:]
 
-    def __eq__(self, profile):
-        if profile.ssid:
-            if profile.ssid != self.ssid:
-                return False
+    def __eq__(self, profile: "Profile") -> bool:
+        """Check if two Profile instances are the same"""
+        if profile.ssid and profile.ssid != self.ssid:
+            return False
 
-        if profile.bssid:
-            if profile.bssid != self.bssid:
-                return False
+        if profile.bssid and profile.bssid != self.bssid:
+            return False
 
-        if profile.auth:
-            if profile.auth != self.auth:
-                return False
+        if profile.auth and profile.auth != self.auth:
+            return False
 
-        if profile.cipher:
-            if profile.cipher != self.cipher:
-                return False
+        if profile.cipher and profile.cipher != self.cipher:
+            return False
 
-        if profile.akm:
-            if set(profile.akm).isdisjoint(set(self.akm)):
-                return False
-
-        return True
+        return not (profile.akm and set(profile.akm).isdisjoint(set(self.akm)))

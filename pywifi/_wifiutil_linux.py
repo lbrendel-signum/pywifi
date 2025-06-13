@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
 """Implementations of wifi functions of Linux."""
 
 import logging
+import os
 import socket
 import stat
-import os
+from pathlib import Path
 
 from pywifi.const import (
-    IFACE_CONNECTED,
-    IFACE_CONNECTING,
-    IFACE_DISCONNECTED,
-    IFACE_INACTIVE,
-    IFACE_SCANNING,
     AKM_TYPE_WPA,
     AKM_TYPE_WPA2,
     AKM_TYPE_WPA2PSK,
@@ -21,6 +16,11 @@ from pywifi.const import (
     AUTH_ALG_OPEN,
     CIPHER_TYPE_CCMP,
     CIPHER_TYPE_TKIP,
+    IFACE_CONNECTED,
+    IFACE_CONNECTING,
+    IFACE_DISCONNECTED,
+    IFACE_INACTIVE,
+    IFACE_SCANNING,
 )
 from pywifi.profile import Profile
 
@@ -69,16 +69,16 @@ class WifiUtil:
     _connections = {}
     _logger = logging.getLogger("pywifi")
 
-    def scan(self, obj):
+    def scan(self, obj) -> None:
         """Trigger the wifi interface to scan."""
-
         self._send_cmd_to_wpas(obj["name"], "SCAN")
 
-    def scan_results(self, obj):
+    def scan_results(self, obj: dict[str]) -> list[str]:
         """Get the AP list after scanning."""
-
         bsses = []
-        bsses_summary = self._send_cmd_to_wpas(obj["name"], "SCAN_RESULTS", True)
+        bsses_summary: list[str] = self._send_cmd_to_wpas(
+            obj["name"], "SCAN_RESULTS", get_reply=True
+        )
         bsses_summary = bsses_summary[:-1].split("\n")
         if len(bsses_summary) == 1:
             return bsses
@@ -108,7 +108,6 @@ class WifiUtil:
 
     def connect(self, obj, network):
         """Connect to the specified AP."""
-
         network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
@@ -118,24 +117,25 @@ class WifiUtil:
             values = item.split("\t")
             if values[1] == network.ssid:
                 network_summary = self._send_cmd_to_wpas(
-                    obj["name"], "SELECT_NETWORK {}".format(values[0]), True
+                    obj["name"],
+                    f"SELECT_NETWORK {values[0]}",
+                    True,
                 )
 
     def disconnect(self, obj):
         """Disconnect to the specified AP."""
-
         self._send_cmd_to_wpas(obj["name"], "DISCONNECT")
 
     def add_network_profile(self, obj, params):
         """Add an AP profile for connecting to afterward."""
-
         network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", True)
         network_id = network_id.strip()
 
         params.process_akm()
 
         self._send_cmd_to_wpas(
-            obj["name"], 'SET_NETWORK {} ssid "{}"'.format(network_id, params.ssid)
+            obj["name"],
+            f'SET_NETWORK {network_id} ssid "{params.ssid}"',
         )
 
         key_mgmt = ""
@@ -148,7 +148,8 @@ class WifiUtil:
 
         if key_mgmt:
             self._send_cmd_to_wpas(
-                obj["name"], "SET_NETWORK {} key_mgmt {}".format(network_id, key_mgmt)
+                obj["name"],
+                f"SET_NETWORK {network_id} key_mgmt {key_mgmt}",
             )
 
         proto = ""
@@ -159,19 +160,20 @@ class WifiUtil:
 
         if proto:
             self._send_cmd_to_wpas(
-                obj["name"], "SET_NETWORK {} proto {}".format(network_id, proto)
+                obj["name"],
+                f"SET_NETWORK {network_id} proto {proto}",
             )
 
         if params.akm[-1] in [AKM_TYPE_WPAPSK, AKM_TYPE_WPA2PSK]:
             self._send_cmd_to_wpas(
-                obj["name"], 'SET_NETWORK {} psk "{}"'.format(network_id, params.key)
+                obj["name"],
+                f'SET_NETWORK {network_id} psk "{params.key}"',
             )
 
         return params
 
     def network_profiles(self, obj):
         """Get AP profiles."""
-
         networks = []
         network_ids = []
         network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
@@ -188,52 +190,59 @@ class WifiUtil:
             network.id = network_id
 
             ssid = self._send_cmd_to_wpas(
-                obj["name"], "GET_NETWORK {} ssid".format(network_id), True
+                obj["name"],
+                f"GET_NETWORK {network_id} ssid",
+                True,
             )
             if ssid.upper().startswith("FAIL"):
                 continue
-            else:
-                network.ssid = ssid[1:-1]
+            network.ssid = ssid[1:-1]
 
             key_mgmt = self._send_cmd_to_wpas(
-                obj["name"], "GET_NETWORK {} key_mgmt".format(network_id), True
+                obj["name"],
+                f"GET_NETWORK {network_id} key_mgmt",
+                True,
             )
 
             network.akm = []
             if key_mgmt.upper().startswith("FAIL"):
                 continue
-            else:
-                if key_mgmt.upper() in ["WPA-PSK"]:
-                    proto = self._send_cmd_to_wpas(
-                        obj["name"], "GET_NETWORK {} proto".format(network_id), True
-                    )
+            if key_mgmt.upper() in ["WPA-PSK"]:
+                proto = self._send_cmd_to_wpas(
+                    obj["name"],
+                    f"GET_NETWORK {network_id} proto",
+                    True,
+                )
 
-                    if proto.upper() == "RSN":
-                        network.akm.append(AKM_TYPE_WPA2PSK)
-                    else:
-                        network.akm.append(AKM_TYPE_WPAPSK)
-                elif key_mgmt.upper() in ["WPA-EAP"]:
-                    proto = self._send_cmd_to_wpas(
-                        obj["name"], "GET_NETWORK {} proto".format(network_id), True
-                    )
+                if proto.upper() == "RSN":
+                    network.akm.append(AKM_TYPE_WPA2PSK)
+                else:
+                    network.akm.append(AKM_TYPE_WPAPSK)
+            elif key_mgmt.upper() in ["WPA-EAP"]:
+                proto = self._send_cmd_to_wpas(
+                    obj["name"],
+                    f"GET_NETWORK {network_id} proto",
+                    True,
+                )
 
-                    if proto.upper() == "RSN":
-                        network.akm.append(AKM_TYPE_WPA2)
-                    else:
-                        network.akm.append(AKM_TYPE_WPA)
+                if proto.upper() == "RSN":
+                    network.akm.append(AKM_TYPE_WPA2)
+                else:
+                    network.akm.append(AKM_TYPE_WPA)
 
             ciphers = self._send_cmd_to_wpas(
-                obj["name"], "GET_NETWORK {} pairwise".format(network_id), True
+                obj["name"],
+                f"GET_NETWORK {network_id} pairwise",
+                True,
             ).split(" ")
 
             if ciphers[0].upper().startswith("FAIL"):
                 continue
-            else:
-                # Assume the possible ciphers TKIP and CCMP
-                if len(ciphers) == 1:
-                    network.cipher = cipher_str_to_value(ciphers[0].upper())
-                elif "CCMP" in ciphers:
-                    network.cipher = CIPHER_TYPE_CCMP
+            # Assume the possible ciphers TKIP and CCMP
+            if len(ciphers) == 1:
+                network.cipher = cipher_str_to_value(ciphers[0].upper())
+            elif "CCMP" in ciphers:
+                network.cipher = CIPHER_TYPE_CCMP
 
             networks.append(network)
 
@@ -241,7 +250,6 @@ class WifiUtil:
 
     def remove_network_profile(self, obj, params):
         """Remove the specified AP profiles"""
-
         network_id = -1
         profiles = self.network_profiles(obj)
 
@@ -250,16 +258,14 @@ class WifiUtil:
                 network_id = profile.id
 
         if network_id != -1:
-            self._send_cmd_to_wpas(obj["name"], "REMOVE_NETWORK {}".format(network_id))
+            self._send_cmd_to_wpas(obj["name"], f"REMOVE_NETWORK {network_id}")
 
     def remove_all_network_profiles(self, obj):
         """Remove all the AP profiles."""
-
         self._send_cmd_to_wpas(obj["name"], "REMOVE_NETWORK all")
 
     def status(self, obj):
         """Get the wifi interface status."""
-
         reply = self._send_cmd_to_wpas(obj["name"], "STATUS", True)
         result = reply.split("\n")
 
@@ -271,10 +277,9 @@ class WifiUtil:
 
     def interfaces(self):
         """Get the wifi interface lists."""
-
         ifaces = []
         for f in sorted(os.listdir(CTRL_IFACE_DIR)):
-            sock_file = "/".join([CTRL_IFACE_DIR, f])
+            sock_file = f"{CTRL_IFACE_DIR}/{f}"
             mode = os.stat(sock_file).st_mode
             if stat.S_ISSOCK(mode):
                 iface = {}
@@ -319,7 +324,7 @@ class WifiUtil:
             if stat.S_ISSOCK(mode):
                 os.remove(sock_file)
 
-    def _send_cmd_to_wpas(self, iface, cmd, get_reply=False):
+    def _send_cmd_to_wpas(self, iface, cmd, *, get_reply: bool = False):
         if "psk" not in cmd:
             self._logger.info("Send cmd '%s' to wpa_s", cmd)
         sock = self._connections[iface]["sock"]
@@ -331,5 +336,8 @@ class WifiUtil:
 
         if reply != b"OK\n":
             self._logger.error(
-                "Unexpected resp '%s' for Command '%s'", reply.decode("utf-8"), cmd
+                "Unexpected resp '%s' for Command '%s'",
+                reply.decode("utf-8"),
+                cmd,
             )
+        return None

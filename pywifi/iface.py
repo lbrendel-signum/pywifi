@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
 """Implement Interface for manipulating wifi devies."""
 
 import logging
 import platform
+
+from pywifi.profile import Profile
 
 if platform.system().lower() == "windows":
     from . import _wifiutil_win as wifiutil
@@ -26,26 +27,23 @@ class Interface:
     _wifi_ctrl = {}
     _logger = None
 
-    def __init__(self, raw_obj):
+    def __init__(self, raw_obj: dict[str]) -> None:
+        """Create wifi interface instance"""
         self._raw_obj = raw_obj
         self._wifi_ctrl = wifiutil.WifiUtil()
         self._logger = logging.getLogger("pywifi")
 
-    def name(self):
-        """ "Get the name of the wifi interfacce."""
-
+    def name(self) -> str:
+        """Get the name of the wifi interface."""
         return self._raw_obj["name"]
 
-    def scan(self):
+    def scan(self) -> None:
         """Trigger the wifi interface to scan."""
-
         self._logger.info("iface '%s' scans", self.name())
-
         self._wifi_ctrl.scan(self._raw_obj)
 
-    def scan_results(self):
+    def scan_results(self) -> list[Profile]:
         """Return the scan result."""
-
         bsses = self._wifi_ctrl.scan_results(self._raw_obj)
 
         if self._logger.isEnabledFor(logging.INFO):
@@ -60,24 +58,20 @@ class Interface:
 
         return bsses
 
-    def add_network_profile(self, params):
+    def add_network_profile(self, params: Profile) -> Profile:
         """Add the info of the AP for connecting afterward."""
-
         return self._wifi_ctrl.add_network_profile(self._raw_obj, params)
 
-    def remove_network_profile(self, params):
+    def remove_network_profile(self, params: Profile) -> None:
         """Remove the specified AP settings."""
-
         self._wifi_ctrl.remove_network_profile(self._raw_obj, params)
 
-    def remove_all_network_profiles(self):
+    def remove_all_network_profiles(self) -> None:
         """Remove all the AP settings."""
-
         self._wifi_ctrl.remove_all_network_profiles(self._raw_obj)
 
-    def network_profiles(self):
+    def network_profiles(self) -> list[Profile]:
         """Get all the AP profiles."""
-
         profiles = self._wifi_ctrl.network_profiles(self._raw_obj)
 
         if self._logger.isEnabledFor(logging.INFO):
@@ -90,21 +84,16 @@ class Interface:
 
         return profiles
 
-    def connect(self, params):
+    def connect(self, params: Profile) -> None:
         """Connect to the specified AP."""
-
         self._logger.info("iface '%s' connects to AP: '%s'", self.name(), params.ssid)
-
         self._wifi_ctrl.connect(self._raw_obj, params)
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from the specified AP."""
-
         self._logger.info("iface '%s' disconnects", self.name())
-
         self._wifi_ctrl.disconnect(self._raw_obj)
 
-    def status(self):
+    def status(self) -> int:
         """Get the status of the wifi interface."""
-
         return self._wifi_ctrl.status(self._raw_obj)

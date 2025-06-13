@@ -1,56 +1,56 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
 """Implementations of wifi functions of Linux."""
 
-import re
-import platform
 import logging
+import platform
+import re
 from ctypes import (
     POINTER,
-    windll,
-    c_ubyte,
     Structure,
-    c_wchar,
+    _Pointer,
+    byref,
+    c_bool,
+    c_byte,
+    c_char,
+    c_long,
+    c_ubyte,
     c_uint,
     c_ulong,
-    c_char,
-    c_ushort,
-    c_bool,
-    c_long,
     c_ulonglong,
-    c_byte,
+    c_ushort,
+    c_void_p,
+    c_wchar,
     c_wchar_p,
-    pointer,
-    byref,
     cast,
     create_unicode_buffer,
-    c_void_p,
+    pointer,
+    windll,
 )
-from ctypes.wintypes import DWORD, WCHAR, HANDLE, LPWSTR
+from ctypes.wintypes import DWORD, HANDLE, LPWSTR, WCHAR
+
 from comtypes import GUID
 
 from pywifi.const import (
-    IFACE_CONNECTED,
-    IFACE_CONNECTING,
-    IFACE_DISCONNECTED,
-    IFACE_INACTIVE,
-    AUTH_ALG_OPEN,
     AKM_TYPE_NONE,
     AKM_TYPE_UNKNOWN,
-    AUTH_ALG_SHARED,
     AKM_TYPE_WPA,
     AKM_TYPE_WPA2,
     AKM_TYPE_WPA2PSK,
     AKM_TYPE_WPAPSK,
+    AUTH_ALG_OPEN,
+    AUTH_ALG_SHARED,
     CIPHER_TYPE_CCMP,
     CIPHER_TYPE_NONE,
     CIPHER_TYPE_TKIP,
     CIPHER_TYPE_UNKNOWN,
     CIPHER_TYPE_WEP,
+    IFACE_CONNECTED,
+    IFACE_CONNECTING,
+    IFACE_DISCONNECTED,
+    IFACE_INACTIVE,
 )
 from pywifi.profile import Profile
-
 
 if platform.release().lower() == "xp":
     if platform.win32_ver()[2].lower() in ["sp2", "sp3"]:
@@ -125,7 +125,7 @@ cipher_value_to_str_dict = {
 }
 
 
-class WLAN_INTERFACE_INFO(Structure):
+class WLAN_INTERFACE_INFO(Structure):  # noqa: N801
     _fields_ = [
         ("InterfaceGuid", GUID),
         ("strInterfaceDescription", c_wchar * 256),
@@ -133,7 +133,7 @@ class WLAN_INTERFACE_INFO(Structure):
     ]
 
 
-class WLAN_INTERFACE_INFO_LIST(Structure):
+class WLAN_INTERFACE_INFO_LIST(Structure):  # noqa: N801
     _fields_ = [
         ("dwNumberOfItems", DWORD),
         ("dwIndex", DWORD),
@@ -141,19 +141,19 @@ class WLAN_INTERFACE_INFO_LIST(Structure):
     ]
 
 
-class DOT11_SSID(Structure):
+class DOT11_SSID(Structure):  # noqa: N801
     _fields_ = [("uSSIDLength", c_ulong), ("ucSSID", c_char * 32)]
 
 
-class WLAN_RATE_SET(Structure):
+class WLAN_RATE_SET(Structure):  # noqa: N801
     _fields_ = [("uRateSetLength", c_ulong), ("usRateSet", c_ushort * 126)]
 
 
-class WLAN_RAW_DATA(Structure):
+class WLAN_RAW_DATA(Structure):  # noqa: N801
     _fields_ = [("dwDataSize", DWORD), ("DataBlob", c_byte * 1)]
 
 
-class WLAN_AVAILABLE_NETWORK(Structure):
+class WLAN_AVAILABLE_NETWORK(Structure):  # noqa: N801
     _fields_ = [
         ("strProfileName", c_wchar * 256),
         ("dot11Ssid", DOT11_SSID),
@@ -173,7 +173,7 @@ class WLAN_AVAILABLE_NETWORK(Structure):
     ]
 
 
-class WLAN_AVAILABLE_NETWORK_LIST(Structure):
+class WLAN_AVAILABLE_NETWORK_LIST(Structure):  # noqa: N801
     _fields_ = [
         ("dwNumberOfItems", DWORD),
         ("dwIndex", DWORD),
@@ -181,7 +181,7 @@ class WLAN_AVAILABLE_NETWORK_LIST(Structure):
     ]
 
 
-class WLAN_BSS_ENTRY(Structure):
+class WLAN_BSS_ENTRY(Structure):  # noqa: N801
     _fields_ = [
         ("dot11Ssid", DOT11_SSID),
         ("uPhyId", c_ulong),
@@ -202,7 +202,7 @@ class WLAN_BSS_ENTRY(Structure):
     ]
 
 
-class WLAN_BSS_LIST(Structure):
+class WLAN_BSS_LIST(Structure):  # noqa: N801
     _fields_ = [
         ("dwTotalSize", DWORD),
         ("dwNumberOfItems", DWORD),
@@ -210,11 +210,11 @@ class WLAN_BSS_LIST(Structure):
     ]
 
 
-class NDIS_OBJECT_HEADER(Structure):
+class NDIS_OBJECT_HEADER(Structure):  # noqa: N801
     _fields_ = [("Type", c_ubyte), ("Revision", c_ubyte), ("Size", c_ushort)]
 
 
-class DOT11_BSSID_LIST(Structure):
+class DOT11_BSSID_LIST(Structure):  # noqa: N801
     _fields_ = [
         ("Header", NDIS_OBJECT_HEADER),
         ("uNumOfEntries", c_ulong),
@@ -223,7 +223,7 @@ class DOT11_BSSID_LIST(Structure):
     ]
 
 
-class WLAN_CONNECTION_PARAMETERS(Structure):
+class WLAN_CONNECTION_PARAMETERS(Structure):  # noqa: N801
     _fields_ = [
         ("wlanConnectionMode", c_uint),
         ("strProfile", c_wchar_p),
@@ -234,11 +234,11 @@ class WLAN_CONNECTION_PARAMETERS(Structure):
     ]
 
 
-class WLAN_PROFILE_INFO(Structure):
+class WLAN_PROFILE_INFO(Structure):  # noqa: N801
     _fields_ = [("strProfileName", c_wchar * 256), ("dwFlags", DWORD)]
 
 
-class WLAN_PROFILE_INFO_LIST(Structure):
+class WLAN_PROFILE_INFO_LIST(Structure):  # noqa: N801
     _fields_ = [
         ("dwNumberOfItems", DWORD),
         ("dwIndex", DWORD),
@@ -254,24 +254,26 @@ class WifiUtil:
     _ifaces = pointer(WLAN_INTERFACE_INFO_LIST())
     _logger = logging.getLogger("pywifi")
 
-    def scan(self, obj):
+    def scan(self, obj: dict[str]) -> None:
         """Trigger the wifi interface to scan."""
-
         self._wlan_scan(self._handle, byref(obj["guid"]))
 
-    def scan_results(self, obj):
+    def scan_results(self, obj: dict[str]) -> list[Profile]:
         """Get the AP list after scanning."""
-
         avail_network_list = pointer(WLAN_AVAILABLE_NETWORK_LIST())
         self._wlan_get_available_network_list(
-            self._handle, byref(obj["guid"]), byref(avail_network_list)
+            self._handle,
+            byref(obj["guid"]),
+            byref(avail_network_list),
         )
         networks = cast(
-            avail_network_list.contents.Network, POINTER(WLAN_AVAILABLE_NETWORK)
+            avail_network_list.contents.Network,
+            POINTER(WLAN_AVAILABLE_NETWORK),
         )
 
         self._logger.debug(
-            "Scan found %d networks.", avail_network_list.contents.dwNumberOfItems
+            "Scan found %d networks.",
+            avail_network_list.contents.dwNumberOfItems,
         )
 
         network_list = []
@@ -280,7 +282,7 @@ class WifiUtil:
                 ssid = ""
                 for j in range(networks[i].dot11Ssid.uSSIDLength):
                     if networks[i].dot11Ssid.ucSSID != b"":
-                        ssid += "%c" % networks[i].dot11Ssid.ucSSID[j]
+                        ssid += f"{networks[i].dot11Ssid.ucSSID[j]:c}"
 
                 bss_list = pointer(WLAN_BSS_LIST())
                 self._wlan_get_network_bss_list(
@@ -306,7 +308,7 @@ class WifiUtil:
 
                     network.bssid = ""
                     for k in range(6):
-                        network.bssid += "%02x:" % bsses[j].dot11Bssid[k]
+                        network.bssid += f"{bsses[j].dot11Bssid[k]:02x}:"
 
                     network.signal = bsses[j].lRssi
                     network.freq = bsses[j].ulChCenterFrequency
@@ -316,9 +318,8 @@ class WifiUtil:
 
         return network_list
 
-    def connect(self, obj, params):
+    def connect(self, obj: dict[str], params: Profile) -> None:
         """Connect to the specified AP."""
-
         connect_params = WLAN_CONNECTION_PARAMETERS()
         connect_params.wlanConnectionMode = 0  # Profile
         connect_params.dot11BssType = 1  # infra
@@ -328,14 +329,12 @@ class WifiUtil:
         ret = self._wlan_connect(self._handle, obj["guid"], byref(connect_params))
         self._logger.debug("connect result: %d", ret)
 
-    def disconnect(self, obj):
+    def disconnect(self, obj: dict[str]) -> None:
         """Disconnect to the specified AP."""
-
         self._wlan_disconnect(self._handle, obj["guid"])
 
-    def add_network_profile(self, obj, params):
+    def add_network_profile(self, obj: dict[str], params: Profile) -> Profile:
         """Add an AP profile for connecting to afterward."""
-
         reason_code = DWORD()
 
         params.process_akm()
@@ -393,7 +392,11 @@ class WifiUtil:
         xml = xml.format(**profile_data)
 
         status = self._wlan_set_profile(
-            self._handle, obj["guid"], xml, True, byref(reason_code)
+            self._handle,
+            obj["guid"],
+            xml,
+            True,  # noqa: FBT003
+            byref(reason_code),
         )
         if status != ERROR_SUCCESS:
             self._logger.debug("Status %d: Add profile failed", status)
@@ -404,12 +407,13 @@ class WifiUtil:
 
         return params
 
-    def network_profile_name_list(self, obj):
+    def network_profile_name_list(self, obj: dict[str]) -> list[str]:
         """Get AP profile names."""
-
         profile_list = pointer(WLAN_PROFILE_INFO_LIST())
         self._wlan_get_profile_list(
-            self._handle, byref(obj["guid"]), byref(profile_list)
+            self._handle,
+            byref(obj["guid"]),
+            byref(profile_list),
         )
         profiles = cast(profile_list.contents.ProfileInfo, POINTER(WLAN_PROFILE_INFO))
 
@@ -422,9 +426,8 @@ class WifiUtil:
 
         return profile_name_list
 
-    def network_profiles(self, obj):
+    def network_profiles(self, obj: dict[str]) -> list[Profile]:
         """Get AP profiles."""
-
         profile_name_list = self.network_profile_name_list(obj)
 
         profile_list = []
@@ -443,11 +446,7 @@ class WifiUtil:
             )
             # fill profile info
             profile.ssid = re.search(r"<name>(.*)</name>", xml.value).group(1)
-            auth = (
-                re.search(r"<authentication>(.*)</authentication>", xml.value)
-                .group(1)
-                .upper()
-            )
+            auth = re.search(r"<authentication>(.*)</authentication>", xml.value).group(1).upper()
 
             profile.akm = []
             if auth not in akm_str_to_value_dict:
@@ -464,17 +463,15 @@ class WifiUtil:
 
         return profile_list
 
-    def remove_network_profile(self, obj, params):
+    def remove_network_profile(self, obj: dict[str], params: Profile) -> None:
         """Remove the specified AP profile."""
-
         self._logger.debug("delete profile: %s", params.ssid)
         str_buf = create_unicode_buffer(params.ssid)
         ret = self._wlan_delete_profile(self._handle, obj["guid"], str_buf)
         self._logger.debug("delete result %d", ret)
 
-    def remove_all_network_profiles(self, obj):
+    def remove_all_network_profiles(self, obj: dict[str]) -> None:
         """Remove all the AP profiles."""
-
         profile_name_list = self.network_profile_name_list(obj)
 
         for profile_name in profile_name_list:
@@ -483,9 +480,8 @@ class WifiUtil:
             ret = self._wlan_delete_profile(self._handle, obj["guid"], str_buf)
             self._logger.debug("delete result %d", ret)
 
-    def status(self, obj):
+    def status(self, obj: dict[str]) -> int:
         """Get the wifi interface status."""
-
         data_size = DWORD()
         data = PDWORD()
         opcode_value_type = DWORD()
@@ -500,55 +496,68 @@ class WifiUtil:
 
         return status_dict[data.contents.value]
 
-    def interfaces(self):
+    def interfaces(self) -> list[dict[str]]:
         """Get the wifi interface lists."""
-
         ifaces = []
 
         if (
             self._wlan_open_handle(
-                CLIENT_VERSION, byref(self._nego_version), byref(self._handle)
+                CLIENT_VERSION,
+                byref(self._nego_version),
+                byref(self._handle),
             )
             is not ERROR_SUCCESS
         ):
             self._logger.error("Open handle failed!")
 
-        if (
-            self._wlan_enum_interfaces(self._handle, byref(self._ifaces))
-            is not ERROR_SUCCESS
-        ):
+        if self._wlan_enum_interfaces(self._handle, byref(self._ifaces)) is not ERROR_SUCCESS:
             self._logger.error("Enum interface failed!")
 
         interfaces = cast(
-            self._ifaces.contents.InterfaceInfo, POINTER(WLAN_INTERFACE_INFO)
+            self._ifaces.contents.InterfaceInfo,
+            POINTER(WLAN_INTERFACE_INFO),
         )
-        for i in range(0, self._ifaces.contents.dwNumberOfItems):
-            iface = {}
+        for i in range(self._ifaces.contents.dwNumberOfItems):
+            iface: dict[str] = {}
             iface["guid"] = interfaces[i].InterfaceGuid
             iface["name"] = interfaces[i].strInterfaceDescription
             ifaces.append(iface)
 
         return ifaces
 
-    def _wlan_open_handle(self, client_version, _nego_version, handle):
+    def _wlan_open_handle(
+        self,
+        client_version: DWORD,
+        _nego_version: _Pointer[DWORD],
+        handle: _Pointer[HANDLE],
+    ) -> DWORD:
         func = native_wifi.WlanOpenHandle
         func.argtypes = [DWORD, c_void_p, POINTER(DWORD), POINTER(HANDLE)]
         func.restypes = [DWORD]
         return func(client_version, None, _nego_version, handle)
 
-    def _wlan_close_handle(self, handle):
+    def _wlan_close_handle(self, handle: HANDLE) -> DWORD:
         func = native_wifi.WlanCloseHandle
         func.argtypes = [HANDLE, c_void_p]
         func.restypes = [DWORD]
         return func(handle, None)
 
-    def _wlan_enum_interfaces(self, handle, ifaces):
+    def _wlan_enum_interfaces(
+        self,
+        handle: HANDLE,
+        ifaces: _Pointer[_Pointer[WLAN_INTERFACE_INFO_LIST]],
+    ) -> DWORD:
         func = native_wifi.WlanEnumInterfaces
         func.argtypes = [HANDLE, c_void_p, POINTER(POINTER(WLAN_INTERFACE_INFO_LIST))]
         func.restypes = [DWORD]
         return func(handle, None, ifaces)
 
-    def _wlan_get_available_network_list(self, handle, iface_guid, network_list):
+    def _wlan_get_available_network_list(
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        network_list: _Pointer[_Pointer[WLAN_AVAILABLE_NETWORK_LIST]],
+    ) -> DWORD:
         func = native_wifi.WlanGetAvailableNetworkList
         func.argtypes = [
             HANDLE,
@@ -561,8 +570,13 @@ class WifiUtil:
         return func(handle, iface_guid, 2, None, network_list)
 
     def _wlan_get_network_bss_list(
-        self, handle, iface_guid, bss_list, ssid=None, security=False
-    ):
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        bss_list: _Pointer[_Pointer[WLAN_BSS_LIST]],
+        ssid: _Pointer[DOT11_SSID] | None = None,
+        security: c_bool = False,  # noqa: FBT002
+    ) -> DWORD:
         func = native_wifi.WlanGetNetworkBssList
         func.argtypes = [
             HANDLE,
@@ -576,7 +590,7 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, ssid, 1, security, None, bss_list)
 
-    def _wlan_scan(self, handle, iface_guid):
+    def _wlan_scan(self, handle: HANDLE, iface_guid: _Pointer[GUID]) -> DWORD:
         func = native_wifi.WlanScan
         func.argtypes = [
             HANDLE,
@@ -588,7 +602,12 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, None, None, None)
 
-    def _wlan_connect(self, handle, iface_guid, params):
+    def _wlan_connect(
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        params: _Pointer[WLAN_CONNECTION_PARAMETERS],
+    ) -> DWORD:
         func = native_wifi.WlanConnect
         func.argtypes = [
             HANDLE,
@@ -599,7 +618,14 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, params, None)
 
-    def _wlan_set_profile(self, handle, iface_guid, xml, overwrite, reason_code):
+    def _wlan_set_profile(
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        xml: c_wchar_p,
+        overwrite: c_bool,
+        reason_code: _Pointer[DWORD],
+    ) -> DWORD:
         func = native_wifi.WlanSetProfile
         func.argtypes = [
             HANDLE,
@@ -614,13 +640,23 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, 2, xml, None, overwrite, None, reason_code)
 
-    def _wlan_reason_code_to_str(self, reason_code, buf_size, buf):
+    def _wlan_reason_code_to_str(
+        self,
+        reason_code: DWORD,
+        buf_size: DWORD,
+        buf: _Pointer[c_wchar],
+    ) -> DWORD:
         func = native_wifi.WlanReasonCodeToString
         func.argtypes = [DWORD, DWORD, PWCHAR, c_void_p]
         func.restypes = [DWORD]
         return func(reason_code, buf_size, buf, None)
 
-    def _wlan_get_profile_list(self, handle, iface_guid, profile_list):
+    def _wlan_get_profile_list(
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        profile_list: _Pointer[_Pointer[WLAN_PROFILE_INFO_LIST]],
+    ) -> DWORD:
         func = native_wifi.WlanGetProfileList
         func.argtypes = [
             HANDLE,
@@ -631,7 +667,15 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, None, profile_list)
 
-    def _wlan_get_profile(self, handle, iface_guid, profile_name, xml, flags, access):
+    def _wlan_get_profile(  # noqa: PLR0913
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        profile_name: c_wchar_p,
+        xml: _Pointer[c_wchar_p],
+        flags: _Pointer[DWORD],
+        access: _Pointer[DWORD],
+    ) -> DWORD:
         func = native_wifi.WlanGetProfile
         func.argtypes = [
             HANDLE,
@@ -645,15 +689,26 @@ class WifiUtil:
         func.restypes = [DWORD]
         return func(handle, iface_guid, profile_name, None, xml, flags, access)
 
-    def _wlan_delete_profile(self, handle, iface_guid, profile_name):
+    def _wlan_delete_profile(
+        self,
+        handle: HANDLE,
+        iface_guid: POINTER,
+        profile_name: c_wchar_p,
+    ) -> DWORD:
         func = native_wifi.WlanDeleteProfile
         func.argtypes = [HANDLE, POINTER(GUID), c_wchar_p, c_void_p]
         func.restypes = [DWORD]
         return func(handle, iface_guid, profile_name, None)
 
-    def _wlan_query_interface(
-        self, handle, iface_guid, opcode, data_size, data, opcode_value_type
-    ):
+    def _wlan_query_interface(  # noqa: PLR0913
+        self,
+        handle: HANDLE,
+        iface_guid: _Pointer[GUID],
+        opcode: DWORD,
+        data_size: _Pointer[DWORD],
+        data: _Pointer[_Pointer[DWORD]],
+        opcode_value_type: _Pointer[DWORD],
+    ) -> DWORD:
         func = native_wifi.WlanQueryInterface
         func.argtypes = [
             HANDLE,
@@ -666,16 +721,22 @@ class WifiUtil:
         ]
         func.restypes = [DWORD]
         return func(
-            handle, iface_guid, opcode, None, data_size, data, opcode_value_type
+            handle,
+            iface_guid,
+            opcode,
+            None,
+            data_size,
+            data,
+            opcode_value_type,
         )
 
-    def _wlan_disconnect(self, handle, iface_guid):
+    def _wlan_disconnect(self, handle: HANDLE, iface_guid: _Pointer[GUID]) -> DWORD:
         func = native_wifi.WlanDisconnect
         func.argtypes = [HANDLE, POINTER(GUID), c_void_p]
         func.restypes = [DWORD]
         return func(handle, iface_guid, None)
 
-    def _get_auth_alg(self, auth_val):
+    def _get_auth_alg(self, auth_val: int) -> list[int]:
         auth_alg = []
         if auth_val in [1, 3, 4, 6, 7]:
             auth_alg.append(AUTH_ALG_OPEN)
@@ -684,11 +745,11 @@ class WifiUtil:
 
         return auth_alg
 
-    def _get_akm(self, akm_val):
-        akm = []
-        if akm_val == 2:
+    def _get_akm(self, akm_val: int) -> list[int]:
+        akm: list[int] = []
+        if akm_val == AKM_TYPE_WPAPSK:
             akm.append(AKM_TYPE_WPAPSK)
-        elif akm_val == 4:
+        elif akm_val == AKM_TYPE_WPA2PSK:
             akm.append(AKM_TYPE_WPA2PSK)
 
         return akm
