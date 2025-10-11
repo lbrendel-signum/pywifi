@@ -141,6 +141,8 @@ class Mock:
 
     def __init__(self) -> None:
         self._dict = {}
+        # Add default attributes that os.stat should return
+        self._dict["st_mode"] = 0o140000  # Socket file mode
 
     def __getattr__(self, field: str) -> Any:  # noqa: ANN401
         return self._dict.get(field, None)
@@ -148,13 +150,29 @@ class Mock:
 
 def pywifi_test_patch(test_func) -> None:
     def core_patch(*args, **kwargs):
-        os.stat = lambda *_args: Mock()
-        os.listdir = lambda *_args: ["wlx000c433243ce"]
-        stat.S_ISSOCK = lambda *_args: True
-        socket.socket = lambda *_args: SockMock()
-        os.remove = lambda *_args: True
+        # Save original functions
+        original_stat = os.stat
+        original_listdir = os.listdir
+        original_S_ISSOCK = stat.S_ISSOCK
+        original_socket = socket.socket
+        original_remove = os.remove
+        
+        # Create mocks that accept both args and kwargs
+        os.stat = lambda *_args, **_kwargs: Mock()
+        os.listdir = lambda *_args, **_kwargs: ["wlx000c433243ce"]
+        stat.S_ISSOCK = lambda *_args, **_kwargs: True
+        socket.socket = lambda *_args, **_kwargs: SockMock()
+        os.remove = lambda *_args, **_kwargs: True
 
-        test_func(*args, **kwargs)
+        try:
+            test_func(*args, **kwargs)
+        finally:
+            # Restore original functions
+            os.stat = original_stat
+            os.listdir = original_listdir
+            stat.S_ISSOCK = original_S_ISSOCK
+            socket.socket = original_socket
+            os.remove = original_remove
 
     return core_patch
 
