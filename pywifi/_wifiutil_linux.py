@@ -108,7 +108,7 @@ class WifiUtil:
 
     def connect(self, obj, network):
         """Connect to the specified AP."""
-        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
+        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", get_reply=True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
             return networks
@@ -119,7 +119,7 @@ class WifiUtil:
                 network_summary = self._send_cmd_to_wpas(
                     obj["name"],
                     f"SELECT_NETWORK {values[0]}",
-                    True,
+                    get_reply=True,
                 )
 
     def disconnect(self, obj):
@@ -128,7 +128,7 @@ class WifiUtil:
 
     def add_network_profile(self, obj, params):
         """Add an AP profile for connecting to afterward."""
-        network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", True)
+        network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", get_reply=True)
         network_id = network_id.strip()
 
         params.process_akm()
@@ -176,7 +176,7 @@ class WifiUtil:
         """Get AP profiles."""
         networks = []
         network_ids = []
-        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
+        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", get_reply=True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
             return networks
@@ -192,7 +192,7 @@ class WifiUtil:
             ssid = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} ssid",
-                True,
+                get_reply=True,
             )
             if ssid.upper().startswith("FAIL"):
                 continue
@@ -201,7 +201,7 @@ class WifiUtil:
             key_mgmt = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} key_mgmt",
-                True,
+                get_reply=True,
             )
 
             network.akm = []
@@ -211,7 +211,7 @@ class WifiUtil:
                 proto = self._send_cmd_to_wpas(
                     obj["name"],
                     f"GET_NETWORK {network_id} proto",
-                    True,
+                    get_reply=True,
                 )
 
                 if proto.upper() == "RSN":
@@ -222,7 +222,7 @@ class WifiUtil:
                 proto = self._send_cmd_to_wpas(
                     obj["name"],
                     f"GET_NETWORK {network_id} proto",
-                    True,
+                    get_reply=True,
                 )
 
                 if proto.upper() == "RSN":
@@ -233,7 +233,7 @@ class WifiUtil:
             ciphers = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} pairwise",
-                True,
+                get_reply=True,
             ).split(" ")
 
             if ciphers[0].upper().startswith("FAIL"):
@@ -266,7 +266,7 @@ class WifiUtil:
 
     def status(self, obj):
         """Get the wifi interface status."""
-        reply = self._send_cmd_to_wpas(obj["name"], "STATUS", True)
+        reply = self._send_cmd_to_wpas(obj["name"], "STATUS", get_reply=True)
         result = reply.split("\n")
 
         status = ""
