@@ -20,9 +20,9 @@ with open('README.md', 'r') as f:
     readme = f.read()
 
 if platform.system().lower() == 'windows':
-    requires = ['comtypes']
+    requires = ['comtypes', 'typer>=0.17.0']
 else:
-    requires = []
+    requires = ['typer>=0.17.0']
 
 test_requires = [
     'pytest>=3.3.0'
