@@ -26,6 +26,42 @@ use pip to install from source:
     cd pywifi/
     pip install .
 
+## CLI Usage
+
+pywifi now includes a command-line interface for convenient WiFi management:
+
+### List available WiFi interfaces
+
+    pywifi list-interfaces
+
+### Scan for networks
+
+    pywifi scan
+
+### Connect to a network
+
+    # Open network
+    pywifi connect "Network-Name"
+    
+    # Secured network (WPA2-PSK)
+    pywifi connect "Network-Name" --password "your-password"
+
+### Disconnect from current network
+
+    pywifi disconnect
+
+### Check interface status
+
+    pywifi status
+
+### Get help
+
+    pywifi --help
+    pywifi scan --help
+    pywifi connect --help
+
+For more CLI options, use the `--help` flag with any command.
+
 ## Documentation
 
 For the details of pywifi, please refer to [Documentation].
