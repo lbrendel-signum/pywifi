@@ -1,6 +1,94 @@
 
 # Documentation
 
+## CLI Usage
+
+pywifi includes a command-line interface for easy WiFi management from the terminal.
+
+### Basic Commands
+
+#### List Interfaces
+
+List all available WiFi interfaces on your system:
+
+```bash
+pywifi list-interfaces
+```
+
+#### Scan for Networks
+
+Scan for available WiFi networks:
+
+```bash
+pywifi scan
+```
+
+Options:
+- `--interface/-i`: WiFi interface index (default: 0)
+- `--wait/-w`: Seconds to wait for scan results (default: 5)
+
+Example:
+```bash
+pywifi scan --wait 10 --interface 0
+```
+
+#### Connect to Network
+
+Connect to a WiFi network:
+
+```bash
+# Connect to an open network
+pywifi connect "Network-SSID"
+
+# Connect to a secured network (WPA2-PSK)
+pywifi connect "Network-SSID" --password "your-password"
+```
+
+Options:
+- `--password/-p`: Network password (for secured networks)
+- `--interface/-i`: WiFi interface index (default: 0)
+- `--timeout/-t`: Connection timeout in seconds (default: 10)
+
+Example:
+```bash
+pywifi connect "MyHomeWiFi" -p "MyPassword123" -t 15
+```
+
+#### Disconnect from Network
+
+Disconnect from the current WiFi network:
+
+```bash
+pywifi disconnect
+```
+
+Options:
+- `--interface/-i`: WiFi interface index (default: 0)
+
+#### Check Status
+
+Check the status of a WiFi interface:
+
+```bash
+pywifi status
+```
+
+Options:
+- `--interface/-i`: WiFi interface index (default: 0)
+
+### Getting Help
+
+Get help for any command:
+
+```bash
+pywifi --help
+pywifi scan --help
+pywifi connect --help
+pywifi disconnect --help
+pywifi status --help
+pywifi list-interfaces --help
+```
+
 ## Constants
 
 Following constatns are defined in pywifi.
