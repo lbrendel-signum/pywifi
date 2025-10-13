@@ -254,11 +254,11 @@ class WifiUtil:
     _ifaces = pointer(WLAN_INTERFACE_INFO_LIST())
     _logger = logging.getLogger("pywifi")
 
-    def scan(self, obj: dict[str]) -> None:
+    def scan(self, obj: dict[str, str]) -> None:
         """Trigger the wifi interface to scan."""
         self._wlan_scan(self._handle, byref(obj["guid"]))
 
-    def scan_results(self, obj: dict[str]) -> list[Profile]:
+    def scan_results(self, obj: dict[str, str]) -> list[Profile]:
         """Get the AP list after scanning."""
         avail_network_list = pointer(WLAN_AVAILABLE_NETWORK_LIST())
         self._wlan_get_available_network_list(
@@ -318,7 +318,7 @@ class WifiUtil:
 
         return network_list
 
-    def connect(self, obj: dict[str], params: Profile) -> None:
+    def connect(self, obj: dict[str, str], params: Profile) -> None:
         """Connect to the specified AP."""
         connect_params = WLAN_CONNECTION_PARAMETERS()
         connect_params.wlanConnectionMode = 0  # Profile
@@ -329,11 +329,11 @@ class WifiUtil:
         ret = self._wlan_connect(self._handle, obj["guid"], byref(connect_params))
         self._logger.debug("connect result: %d", ret)
 
-    def disconnect(self, obj: dict[str]) -> None:
+    def disconnect(self, obj: dict[str, str]) -> None:
         """Disconnect to the specified AP."""
         self._wlan_disconnect(self._handle, obj["guid"])
 
-    def add_network_profile(self, obj: dict[str], params: Profile) -> Profile:
+    def add_network_profile(self, obj: dict[str, str], params: Profile) -> Profile:
         """Add an AP profile for connecting to afterward."""
         reason_code = DWORD()
 
@@ -407,7 +407,7 @@ class WifiUtil:
 
         return params
 
-    def network_profile_name_list(self, obj: dict[str]) -> list[str]:
+    def network_profile_name_list(self, obj: dict[str, str]) -> list[str]:
         """Get AP profile names."""
         profile_list = pointer(WLAN_PROFILE_INFO_LIST())
         self._wlan_get_profile_list(
@@ -426,7 +426,7 @@ class WifiUtil:
 
         return profile_name_list
 
-    def network_profiles(self, obj: dict[str]) -> list[Profile]:
+    def network_profiles(self, obj: dict[str, str]) -> list[Profile]:
         """Get AP profiles."""
         profile_name_list = self.network_profile_name_list(obj)
 
@@ -463,14 +463,14 @@ class WifiUtil:
 
         return profile_list
 
-    def remove_network_profile(self, obj: dict[str], params: Profile) -> None:
+    def remove_network_profile(self, obj: dict[str, str], params: Profile) -> None:
         """Remove the specified AP profile."""
         self._logger.debug("delete profile: %s", params.ssid)
         str_buf = create_unicode_buffer(params.ssid)
         ret = self._wlan_delete_profile(self._handle, obj["guid"], str_buf)
         self._logger.debug("delete result %d", ret)
 
-    def remove_all_network_profiles(self, obj: dict[str]) -> None:
+    def remove_all_network_profiles(self, obj: dict[str, str]) -> None:
         """Remove all the AP profiles."""
         profile_name_list = self.network_profile_name_list(obj)
 
@@ -480,7 +480,7 @@ class WifiUtil:
             ret = self._wlan_delete_profile(self._handle, obj["guid"], str_buf)
             self._logger.debug("delete result %d", ret)
 
-    def status(self, obj: dict[str]) -> int:
+    def status(self, obj: dict[str, str]) -> int:
         """Get the wifi interface status."""
         data_size = DWORD()
         data = PDWORD()
@@ -496,7 +496,7 @@ class WifiUtil:
 
         return status_dict[data.contents.value]
 
-    def interfaces(self) -> list[dict[str]]:
+    def interfaces(self) -> list[dict[str, str]]:
         """Get the wifi interface lists."""
         ifaces = []
 
@@ -518,7 +518,7 @@ class WifiUtil:
             POINTER(WLAN_INTERFACE_INFO),
         )
         for i in range(self._ifaces.contents.dwNumberOfItems):
-            iface: dict[str] = {}
+            iface: dict[str, str] = {}
             iface["guid"] = interfaces[i].InterfaceGuid
             iface["name"] = interfaces[i].strInterfaceDescription
             ifaces.append(iface)

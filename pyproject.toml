@@ -37,3 +37,6 @@ lint.ignore = [
 
 [project.scripts]
 pywifi = "pywifi.cli:app"
+
+[tool.uv]
+package = true

@@ -69,11 +69,11 @@ class WifiUtil:
     _connections = {}
     _logger = logging.getLogger("pywifi")
 
-    def scan(self, obj: dict[str]) -> None:
+    def scan(self, obj: dict[str, str]) -> None:
         """Trigger the wifi interface to scan."""
         self._send_cmd_to_wpas(obj["name"], "SCAN")
 
-    def scan_results(self, obj: dict[str]) -> list[Profile]:
+    def scan_results(self, obj: dict[str, str]) -> list[Profile]:
         """Get the AP list after scanning."""
         bsses = []
         bsses_summary: list[str] = self._send_cmd_to_wpas(
@@ -106,9 +106,9 @@ class WifiUtil:
 
         return bsses
 
-    def connect(self, obj: dict[str], network: Profile) -> None:
+    def connect(self, obj: dict[str, str], network: Profile) -> None:
         """Connect to the specified AP."""
-        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
+        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", get_reply=True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
             return
@@ -119,16 +119,16 @@ class WifiUtil:
                 network_summary = self._send_cmd_to_wpas(
                     obj["name"],
                     f"SELECT_NETWORK {values[0]}",
-                    True,
+                    get_reply=True,
                 )
 
-    def disconnect(self, obj: dict[str]) -> None:
+    def disconnect(self, obj: dict[str, str]) -> None:
         """Disconnect to the specified AP."""
         self._send_cmd_to_wpas(obj["name"], "DISCONNECT")
 
-    def add_network_profile(self, obj: dict[str], params: Profile) -> Profile:
+    def add_network_profile(self, obj: dict[str, str], params: Profile) -> Profile:
         """Add an AP profile for connecting to afterward."""
-        network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", True)
+        network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", get_reply=True)
         network_id = network_id.strip()
 
         params.process_akm()
@@ -172,11 +172,11 @@ class WifiUtil:
 
         return params
 
-    def network_profiles(self, obj: dict[str]) -> list[Profile]:
+    def network_profiles(self, obj: dict[str, str]) -> list[Profile]:
         """Get AP profiles."""
         networks = []
         network_ids = []
-        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", True)
+        network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", get_reply=True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
             return networks
@@ -192,7 +192,7 @@ class WifiUtil:
             ssid = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} ssid",
-                True,
+                get_reply=True,
             )
             if ssid.upper().startswith("FAIL"):
                 continue
@@ -201,7 +201,7 @@ class WifiUtil:
             key_mgmt = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} key_mgmt",
-                True,
+                get_reply=True,
             )
 
             network.akm = []
@@ -211,7 +211,7 @@ class WifiUtil:
                 proto = self._send_cmd_to_wpas(
                     obj["name"],
                     f"GET_NETWORK {network_id} proto",
-                    True,
+                    get_reply=True,
                 )
 
                 if proto.upper() == "RSN":
@@ -222,7 +222,7 @@ class WifiUtil:
                 proto = self._send_cmd_to_wpas(
                     obj["name"],
                     f"GET_NETWORK {network_id} proto",
-                    True,
+                    get_reply=True,
                 )
 
                 if proto.upper() == "RSN":
@@ -233,7 +233,7 @@ class WifiUtil:
             ciphers = self._send_cmd_to_wpas(
                 obj["name"],
                 f"GET_NETWORK {network_id} pairwise",
-                True,
+                get_reply=True,
             ).split(" ")
 
             if ciphers[0].upper().startswith("FAIL"):
@@ -248,7 +248,7 @@ class WifiUtil:
 
         return networks
 
-    def remove_network_profile(self, obj: dict[str], params: Profile) -> None:
+    def remove_network_profile(self, obj: dict[str, str], params: Profile) -> None:
         """Remove the specified AP profiles"""
         network_id = -1
         profiles = self.network_profiles(obj)
@@ -260,13 +260,13 @@ class WifiUtil:
         if network_id != -1:
             self._send_cmd_to_wpas(obj["name"], f"REMOVE_NETWORK {network_id}")
 
-    def remove_all_network_profiles(self, obj: dict[str]) -> None:
+    def remove_all_network_profiles(self, obj: dict[str, str]) -> None:
         """Remove all the AP profiles."""
         self._send_cmd_to_wpas(obj["name"], "REMOVE_NETWORK all")
 
-    def status(self, obj: dict[str]) -> int:
+    def status(self, obj: dict[str, str]) -> int:
         """Get the wifi interface status."""
-        reply = self._send_cmd_to_wpas(obj["name"], "STATUS", True)
+        reply = self._send_cmd_to_wpas(obj["name"], "STATUS", get_reply=True)
         result = reply.split("\n")
 
         status = ""
@@ -276,7 +276,7 @@ class WifiUtil:
                 return status_dict[status.lower()]
         return IFACE_DISCONNECTED
 
-    def interfaces(self) -> list[dict[str]]:
+    def interfaces(self) -> list[dict[str, str]]:
         """Get the wifi interface lists."""
         ifaces = []
         for f in sorted(os.listdir(CTRL_IFACE_DIR)):

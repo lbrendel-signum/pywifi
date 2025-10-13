@@ -22,7 +22,7 @@ def test_cli_help() -> None:
 
 def test_cli_scan_help() -> None:
     """Test CLI scan help."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(app, ["scan", "--help"])
 
     assert result.exit_code == 0
@@ -33,7 +33,7 @@ def test_cli_scan_help() -> None:
 
 def test_cli_connect_help() -> None:
     """Test CLI connect help."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(app, ["connect", "--help"])
 
     assert result.exit_code == 0
@@ -45,7 +45,7 @@ def test_cli_connect_help() -> None:
 
 def test_cli_disconnect_help() -> None:
     """Test CLI disconnect help."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     result = runner.invoke(app, ["disconnect", "--help"])
 
     assert result.exit_code == 0
