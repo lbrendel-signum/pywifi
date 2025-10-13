@@ -69,11 +69,11 @@ class WifiUtil:
     _connections = {}
     _logger = logging.getLogger("pywifi")
 
-    def scan(self, obj) -> None:
+    def scan(self, obj: dict[str]) -> None:
         """Trigger the wifi interface to scan."""
         self._send_cmd_to_wpas(obj["name"], "SCAN")
 
-    def scan_results(self, obj: dict[str]) -> list[str]:
+    def scan_results(self, obj: dict[str]) -> list[Profile]:
         """Get the AP list after scanning."""
         bsses = []
         bsses_summary: list[str] = self._send_cmd_to_wpas(
@@ -106,12 +106,12 @@ class WifiUtil:
 
         return bsses
 
-    def connect(self, obj, network):
+    def connect(self, obj: dict[str], network: Profile) -> None:
         """Connect to the specified AP."""
         network_summary = self._send_cmd_to_wpas(obj["name"], "LIST_NETWORKS", get_reply=True)
         network_summary = network_summary[:-1].split("\n")
         if len(network_summary) == 1:
-            return networks
+            return
 
         for item in network_summary[1:]:
             values = item.split("\t")
@@ -122,11 +122,11 @@ class WifiUtil:
                     get_reply=True,
                 )
 
-    def disconnect(self, obj):
+    def disconnect(self, obj: dict[str]) -> None:
         """Disconnect to the specified AP."""
         self._send_cmd_to_wpas(obj["name"], "DISCONNECT")
 
-    def add_network_profile(self, obj, params):
+    def add_network_profile(self, obj: dict[str], params: Profile) -> Profile:
         """Add an AP profile for connecting to afterward."""
         network_id = self._send_cmd_to_wpas(obj["name"], "ADD_NETWORK", get_reply=True)
         network_id = network_id.strip()
@@ -172,7 +172,7 @@ class WifiUtil:
 
         return params
 
-    def network_profiles(self, obj):
+    def network_profiles(self, obj: dict[str]) -> list[Profile]:
         """Get AP profiles."""
         networks = []
         network_ids = []
@@ -248,7 +248,7 @@ class WifiUtil:
 
         return networks
 
-    def remove_network_profile(self, obj, params):
+    def remove_network_profile(self, obj: dict[str], params: Profile) -> None:
         """Remove the specified AP profiles"""
         network_id = -1
         profiles = self.network_profiles(obj)
@@ -260,11 +260,11 @@ class WifiUtil:
         if network_id != -1:
             self._send_cmd_to_wpas(obj["name"], f"REMOVE_NETWORK {network_id}")
 
-    def remove_all_network_profiles(self, obj):
+    def remove_all_network_profiles(self, obj: dict[str]) -> None:
         """Remove all the AP profiles."""
         self._send_cmd_to_wpas(obj["name"], "REMOVE_NETWORK all")
 
-    def status(self, obj):
+    def status(self, obj: dict[str]) -> int:
         """Get the wifi interface status."""
         reply = self._send_cmd_to_wpas(obj["name"], "STATUS", get_reply=True)
         result = reply.split("\n")
@@ -274,8 +274,9 @@ class WifiUtil:
             if item.startswith("wpa_state="):
                 status = item[10:]
                 return status_dict[status.lower()]
+        return IFACE_DISCONNECTED
 
-    def interfaces(self):
+    def interfaces(self) -> list[dict[str]]:
         """Get the wifi interface lists."""
         ifaces = []
         for f in sorted(os.listdir(CTRL_IFACE_DIR)):
@@ -289,7 +290,7 @@ class WifiUtil:
 
         return ifaces
 
-    def _connect_to_wpa_s(self, iface):
+    def _connect_to_wpa_s(self, iface: str) -> None:
         ctrl_iface = "/".join([CTRL_IFACE_DIR, iface])
         if ctrl_iface in self._connections:
             self._logger.info("Connection for iface '%s' aleady existed!", iface)
@@ -318,13 +319,13 @@ class WifiUtil:
                 break
             retry -= 1
 
-    def _remove_existed_sock(self, sock_file):
+    def _remove_existed_sock(self, sock_file: str) -> None:
         if os.path.exists(sock_file):
             mode = os.stat(sock_file).st_mode
             if stat.S_ISSOCK(mode):
                 os.remove(sock_file)
 
-    def _send_cmd_to_wpas(self, iface, cmd, *, get_reply: bool = False):
+    def _send_cmd_to_wpas(self, iface: str, cmd: str, *, get_reply: bool = False) -> str | None:
         if "psk" not in cmd:
             self._logger.info("Send cmd '%s' to wpa_s", cmd)
         sock = self._connections[iface]["sock"]

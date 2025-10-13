@@ -8,7 +8,7 @@ import platform
 import socket
 import stat
 import time
-from typing import Any
+from typing import Any, Callable
 
 import pywifi
 from pywifi import const
@@ -23,18 +23,18 @@ class SockMock:
         "78:32:1b:63:96:05\t2422\t-91\t[WPA-PSK-CCMP][WPA2-PSK-CCMP][ESS]\tjoyfulness\n"
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_cmd = None
         self._last_state = None
         self._network_profiles = []
 
-    def bind(self, *args, **kwargs) -> None:
+    def bind(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def connect(self, *args, **kwargs) -> None:
+    def connect(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def recv(self, *args, **kwargs) -> None:
+    def recv(self, *args: Any, **kwargs: Any) -> bytes | None:
         if self._last_cmd == "SCAN":
 
             return b"OK\n"
@@ -132,7 +132,7 @@ class SockMock:
             return bytearray(val, "utf-8")
         return None
 
-    def send(self, *args, **kwargs):
+    def send(self, *args: Any, **kwargs: Any) -> None:
         self._last_cmd = args[0].decode("utf-8")
 
 
@@ -148,8 +148,8 @@ class Mock:
         return self._dict.get(field, None)
 
 
-def pywifi_test_patch(test_func) -> None:
-    def core_patch(*args, **kwargs):
+def pywifi_test_patch(test_func: Callable[..., None]) -> Callable[..., None]:
+    def core_patch(*args: Any, **kwargs: Any) -> None:
         # Save original functions
         original_stat = os.stat
         original_listdir = os.listdir
