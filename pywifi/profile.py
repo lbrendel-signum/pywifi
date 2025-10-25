@@ -2,7 +2,7 @@
 
 """Define WiFi Profile."""
 
-from pywifi.const import AKM_TYPE_NONE, AUTH_ALG_OPEN, CIPHER_TYPE_NONE
+from pywifi.const import AkmType, AuthAlgorithm, CipherType
 
 
 class Profile:
@@ -11,9 +11,9 @@ class Profile:
     def __init__(self) -> None:
         """Create instance of a wifi profile"""
         self.id = 0
-        self.auth: int = AUTH_ALG_OPEN
-        self.akm: list[int] = [AKM_TYPE_NONE]
-        self.cipher: int = CIPHER_TYPE_NONE
+        self.auth: int = AuthAlgorithm.OPEN
+        self.akm: list[int] = [AkmType.NONE]
+        self.cipher: int = CipherType.NONE
         self.ssid: str = None
         self.bssid: str = None
         self.key: str = None

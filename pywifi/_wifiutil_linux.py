@@ -6,21 +6,12 @@ import logging
 import os
 import socket
 import stat
-from pathlib import Path
 
 from pywifi.const import (
-    AKM_TYPE_WPA,
-    AKM_TYPE_WPA2,
-    AKM_TYPE_WPA2PSK,
-    AKM_TYPE_WPAPSK,
-    AUTH_ALG_OPEN,
-    CIPHER_TYPE_CCMP,
-    CIPHER_TYPE_TKIP,
-    IFACE_CONNECTED,
-    IFACE_CONNECTING,
-    IFACE_DISCONNECTED,
-    IFACE_INACTIVE,
-    IFACE_SCANNING,
+    AkmType,
+    AuthAlgorithm,
+    CipherType,
+    IfaceStatus,
 )
 from pywifi.profile import Profile
 
@@ -29,37 +20,37 @@ CTRL_IFACE_RETRY = 3
 REPLY_SIZE = 4096
 
 status_dict = {
-    "completed": IFACE_CONNECTED,
-    "inactive": IFACE_INACTIVE,
-    "authenticating": IFACE_CONNECTING,
-    "associating": IFACE_CONNECTING,
-    "associated": IFACE_CONNECTING,
-    "4way_handshake": IFACE_CONNECTING,
-    "group_handshake": IFACE_CONNECTING,
-    "interface_disabled": IFACE_INACTIVE,
-    "disconnected": IFACE_DISCONNECTED,
-    "scanning": IFACE_SCANNING,
+    "completed": IfaceStatus.CONNECTED,
+    "inactive": IfaceStatus.INACTIVE,
+    "authenticating": IfaceStatus.CONNECTING,
+    "associating": IfaceStatus.CONNECTING,
+    "associated": IfaceStatus.CONNECTING,
+    "4way_handshake": IfaceStatus.CONNECTING,
+    "group_handshake": IfaceStatus.CONNECTING,
+    "interface_disabled": IfaceStatus.INACTIVE,
+    "disconnected": IfaceStatus.DISCONNECTED,
+    "scanning": IfaceStatus.SCANNING,
 }
 
 key_mgmt_to_str = {
-    AKM_TYPE_WPA: "WPA-EAP",
-    AKM_TYPE_WPAPSK: "WPA-PSK",
-    AKM_TYPE_WPA2: "WPA-EAP",
-    AKM_TYPE_WPA2PSK: "WPA-PSK",
+    AkmType.WPA: "WPA-EAP",
+    AkmType.WPAPSK: "WPA-PSK",
+    AkmType.WPA2: "WPA-EAP",
+    AkmType.WPA2PSK: "WPA-PSK",
 }
 
 key_mgmt_to_proto_str = {
-    AKM_TYPE_WPA: "WPA",
-    AKM_TYPE_WPAPSK: "WPA",
-    AKM_TYPE_WPA2: "RSN",
-    AKM_TYPE_WPA2PSK: "RSN",
+    AkmType.WPA: "WPA",
+    AkmType.WPAPSK: "WPA",
+    AkmType.WPA2: "RSN",
+    AkmType.WPA2PSK: "RSN",
 }
 
-proto_to_key_mgmt_id = {"WPA": AKM_TYPE_WPAPSK, "RSN": AKM_TYPE_WPA2PSK}
+proto_to_key_mgmt_id = {"WPA": AkmType.WPAPSK, "RSN": AkmType.WPA2PSK}
 
 cipher_str_to_value = {
-    "TKIP": CIPHER_TYPE_TKIP,
-    "CCMP": CIPHER_TYPE_CCMP,
+    "TKIP": CipherType.TKIP,
+    "CCMP": CipherType.CCMP,
 }
 
 
@@ -92,15 +83,15 @@ class WifiUtil:
             bss.ssid = values[4]
             bss.akm = []
             if "WPA-PSK" in values[3]:
-                bss.akm.append(AKM_TYPE_WPAPSK)
+                bss.akm.append(AkmType.WPAPSK)
             if "WPA2-PSK" in values[3]:
-                bss.akm.append(AKM_TYPE_WPA2PSK)
+                bss.akm.append(AkmType.WPA2PSK)
             if "WPA-EAP" in values[3]:
-                bss.akm.append(AKM_TYPE_WPA)
+                bss.akm.append(AkmType.WPA)
             if "WPA2-EAP" in values[3]:
-                bss.akm.append(AKM_TYPE_WPA2)
+                bss.akm.append(AkmType.WPA2)
 
-            bss.auth = AUTH_ALG_OPEN
+            bss.auth = AuthAlgorithm.OPEN
 
             bsses.append(bss)
 
@@ -139,9 +130,9 @@ class WifiUtil:
         )
 
         key_mgmt = ""
-        if params.akm[-1] in [AKM_TYPE_WPAPSK, AKM_TYPE_WPA2PSK]:
+        if params.akm[-1] in [AkmType.WPAPSK, AkmType.WPA2PSK]:
             key_mgmt = "WPA-PSK"
-        elif params.akm[-1] in [AKM_TYPE_WPA, AKM_TYPE_WPA2]:
+        elif params.akm[-1] in [AkmType.WPA, AkmType.WPA2]:
             key_mgmt = "WPA-EAP"
         else:
             key_mgmt = "NONE"
@@ -153,9 +144,9 @@ class WifiUtil:
             )
 
         proto = ""
-        if params.akm[-1] in [AKM_TYPE_WPAPSK, AKM_TYPE_WPA]:
+        if params.akm[-1] in [AkmType.WPAPSK, AkmType.WPA]:
             proto = "WPA"
-        elif params.akm[-1] in [AKM_TYPE_WPA2PSK, AKM_TYPE_WPA2]:
+        elif params.akm[-1] in [AkmType.WPA2PSK, AkmType.WPA2]:
             proto = "RSN"
 
         if proto:
@@ -164,7 +155,7 @@ class WifiUtil:
                 f"SET_NETWORK {network_id} proto {proto}",
             )
 
-        if params.akm[-1] in [AKM_TYPE_WPAPSK, AKM_TYPE_WPA2PSK]:
+        if params.akm[-1] in [AkmType.WPAPSK, AkmType.WPA2PSK]:
             self._send_cmd_to_wpas(
                 obj["name"],
                 f'SET_NETWORK {network_id} psk "{params.key}"',
@@ -215,9 +206,9 @@ class WifiUtil:
                 )
 
                 if proto.upper() == "RSN":
-                    network.akm.append(AKM_TYPE_WPA2PSK)
+                    network.akm.append(AkmType.WPA2PSK)
                 else:
-                    network.akm.append(AKM_TYPE_WPAPSK)
+                    network.akm.append(AkmType.WPAPSK)
             elif key_mgmt.upper() in ["WPA-EAP"]:
                 proto = self._send_cmd_to_wpas(
                     obj["name"],
@@ -226,9 +217,9 @@ class WifiUtil:
                 )
 
                 if proto.upper() == "RSN":
-                    network.akm.append(AKM_TYPE_WPA2)
+                    network.akm.append(AkmType.WPA2)
                 else:
-                    network.akm.append(AKM_TYPE_WPA)
+                    network.akm.append(AkmType.WPA)
 
             ciphers = self._send_cmd_to_wpas(
                 obj["name"],
@@ -242,7 +233,7 @@ class WifiUtil:
             if len(ciphers) == 1:
                 network.cipher = cipher_str_to_value(ciphers[0].upper())
             elif "CCMP" in ciphers:
-                network.cipher = CIPHER_TYPE_CCMP
+                network.cipher = CipherType.CCMP
 
             networks.append(network)
 
@@ -274,7 +265,7 @@ class WifiUtil:
             if item.startswith("wpa_state="):
                 status = item[10:]
                 return status_dict[status.lower()]
-        return IFACE_DISCONNECTED
+        return IfaceStatus.DISCONNECTED
 
     def interfaces(self) -> list[dict[str, str]]:
         """Get the wifi interface lists."""

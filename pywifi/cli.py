@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from pywifi import const
+from pywifi import AkmType, IfaceStatus
 from pywifi.iface import Interface
 from pywifi.profile import Profile
 from pywifi.wifi import PyWiFi
@@ -35,11 +35,11 @@ def _get_interface(interface_index: int = 0) -> Interface:
 def _get_status_name(status: int) -> str:
     """Get human-readable status name."""
     status_names = {
-        const.IFACE_DISCONNECTED: "DISCONNECTED",
-        const.IFACE_SCANNING: "SCANNING",
-        const.IFACE_INACTIVE: "INACTIVE",
-        const.IFACE_CONNECTING: "CONNECTING",
-        const.IFACE_CONNECTED: "CONNECTED",
+        IfaceStatus.DISCONNECTED: "DISCONNECTED",
+        IfaceStatus.SCANNING: "SCANNING",
+        IfaceStatus.INACTIVE: "INACTIVE",
+        IfaceStatus.CONNECTING: "CONNECTING",
+        IfaceStatus.CONNECTED: "CONNECTED",
     }
     return status_names.get(status, "UNKNOWN")
 
@@ -47,12 +47,12 @@ def _get_status_name(status: int) -> str:
 def _get_akm_name(akm: int) -> str:
     """Get human-readable AKM name."""
     akm_names = {
-        const.AKM_TYPE_NONE: "NONE",
-        const.AKM_TYPE_WPA: "WPA",
-        const.AKM_TYPE_WPAPSK: "WPA-PSK",
-        const.AKM_TYPE_WPA2: "WPA2",
-        const.AKM_TYPE_WPA2PSK: "WPA2-PSK",
-        const.AKM_TYPE_UNKNOWN: "UNKNOWN",
+        AkmType.NONE: "NONE",
+        AkmType.WPA: "WPA",
+        AkmType.WPAPSK: "WPA-PSK",
+        AkmType.WPA2: "WPA2",
+        AkmType.WPA2PSK: "WPA2-PSK",
+        AkmType.UNKNOWN: "UNKNOWN",
     }
     return akm_names.get(akm, "UNKNOWN")
 
@@ -124,16 +124,14 @@ def connect(
     # Create profile
     profile = Profile()
     profile.ssid = ssid
-    profile.auth = const.AUTH_ALG_OPEN
 
     if password:
         # Assume WPA2-PSK for networks with password
-        profile.akm = [const.AKM_TYPE_WPA2PSK]
-        profile.cipher = const.CIPHER_TYPE_CCMP
+        profile.akm = [AkmType.WPA2PSK]
         profile.key = password
     else:
         # Open network
-        profile.akm = [const.AKM_TYPE_NONE]
+        profile.akm = [AkmType.NONE]
 
     # Add and connect to network
     iface.remove_all_network_profiles()
@@ -147,7 +145,7 @@ def connect(
 
     while time.time() - start_time < timeout:
         status = iface.status()
-        if status == const.IFACE_CONNECTED:
+        if status == IfaceStatus.CONNECTED:
             connected = True
             break
         time.sleep(1)
@@ -175,7 +173,7 @@ def disconnect(
     time.sleep(1)
 
     status = iface.status()
-    if status in [const.IFACE_DISCONNECTED, const.IFACE_INACTIVE]:
+    if status in [IfaceStatus.DISCONNECTED, IfaceStatus.INACTIVE]:
         typer.echo("Successfully disconnected")
     else:
         status_name = _get_status_name(status)
