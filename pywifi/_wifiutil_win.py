@@ -70,7 +70,7 @@ status_dict = [
     IfaceStatus.DISCONNECTED,
     IfaceStatus.CONNECTING,
     IfaceStatus.CONNECTING,
-    IFACE_CONNECTING,
+    IfaceStatus.CONNECTING,
 ]
 
 auth_value_to_str_dict = {AuthAlgorithm.OPEN: "open", AuthAlgorithm.SHARED: "shared"}

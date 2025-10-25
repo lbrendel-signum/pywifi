@@ -265,7 +265,7 @@ class WifiUtil:
             if item.startswith("wpa_state="):
                 status = item[10:]
                 return status_dict[status.lower()]
-        return IFACE_DISCONNECTED
+        return IfaceStatus.DISCONNECTED
 
     def interfaces(self) -> list[dict[str, str]]:
         """Get the wifi interface lists."""
