@@ -1,33 +1,77 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8
 
 """Constants used in pywifi library define here."""
 
-# Define interface status.
-IFACE_DISCONNECTED = 0
-IFACE_SCANNING = 1
-IFACE_INACTIVE = 2
-IFACE_CONNECTING = 3
-IFACE_CONNECTED = 4
+from enum import IntEnum
 
-# Define auth algorithms.
-AUTH_ALG_OPEN = 0
-AUTH_ALG_SHARED = 1
 
-# Define auth key mgmt types.
-AKM_TYPE_NONE = 0
-AKM_TYPE_WPA = 1
-AKM_TYPE_WPAPSK = 2
-AKM_TYPE_WPA2 = 3
-AKM_TYPE_WPA2PSK = 4
-AKM_TYPE_UNKNOWN = 5
+class IfaceStatus(IntEnum):
+    """Interface status constants."""
 
-# Define ciphers.
-CIPHER_TYPE_NONE = 0
-CIPHER_TYPE_WEP = 1
-CIPHER_TYPE_TKIP = 2
-CIPHER_TYPE_CCMP = 3
-CIPHER_TYPE_UNKNOWN = 4
+    DISCONNECTED = 0
+    SCANNING = 1
+    INACTIVE = 2
+    CONNECTING = 3
+    CONNECTED = 4
 
-KEY_TYPE_NETWORKKEY = 0
-KEY_TYPE_PASSPHRASE = 1
+
+class AuthAlgorithm(IntEnum):
+    """Authentication algorithm constants."""
+
+    OPEN = 0
+    SHARED = 1
+
+
+class AkmType(IntEnum):
+    """Authentication key management type constants."""
+
+    NONE = 0
+    WPA = 1
+    WPAPSK = 2
+    WPA2 = 3
+    WPA2PSK = 4
+    UNKNOWN = 5
+
+
+class CipherType(IntEnum):
+    """Cipher type constants."""
+
+    NONE = 0
+    WEP = 1
+    TKIP = 2
+    CCMP = 3
+    UNKNOWN = 4
+
+
+class KeyType(IntEnum):
+    """Key type constants."""
+
+    NETWORKKEY = 0
+    PASSPHRASE = 1
+
+
+# Backward compatibility - keep old constant names as aliases
+IFACE_DISCONNECTED = IfaceStatus.DISCONNECTED
+IFACE_SCANNING = IfaceStatus.SCANNING
+IFACE_INACTIVE = IfaceStatus.INACTIVE
+IFACE_CONNECTING = IfaceStatus.CONNECTING
+IFACE_CONNECTED = IfaceStatus.CONNECTED
+
+AUTH_ALG_OPEN = AuthAlgorithm.OPEN
+AUTH_ALG_SHARED = AuthAlgorithm.SHARED
+
+AKM_TYPE_NONE = AkmType.NONE
+AKM_TYPE_WPA = AkmType.WPA
+AKM_TYPE_WPAPSK = AkmType.WPAPSK
+AKM_TYPE_WPA2 = AkmType.WPA2
+AKM_TYPE_WPA2PSK = AkmType.WPA2PSK
+AKM_TYPE_UNKNOWN = AkmType.UNKNOWN
+
+CIPHER_TYPE_NONE = CipherType.NONE
+CIPHER_TYPE_WEP = CipherType.WEP
+CIPHER_TYPE_TKIP = CipherType.TKIP
+CIPHER_TYPE_CCMP = CipherType.CCMP
+CIPHER_TYPE_UNKNOWN = CipherType.UNKNOWN
+
+KEY_TYPE_NETWORKKEY = KeyType.NETWORKKEY
+KEY_TYPE_PASSPHRASE = KeyType.PASSPHRASE

@@ -32,23 +32,10 @@ from ctypes.wintypes import DWORD, HANDLE, LPWSTR, WCHAR
 from comtypes import GUID
 
 from pywifi.const import (
-    AKM_TYPE_NONE,
-    AKM_TYPE_UNKNOWN,
-    AKM_TYPE_WPA,
-    AKM_TYPE_WPA2,
-    AKM_TYPE_WPA2PSK,
-    AKM_TYPE_WPAPSK,
-    AUTH_ALG_OPEN,
-    AUTH_ALG_SHARED,
-    CIPHER_TYPE_CCMP,
-    CIPHER_TYPE_NONE,
-    CIPHER_TYPE_TKIP,
-    CIPHER_TYPE_UNKNOWN,
-    CIPHER_TYPE_WEP,
-    IFACE_CONNECTED,
-    IFACE_CONNECTING,
-    IFACE_DISCONNECTED,
-    IFACE_INACTIVE,
+    AkmType,
+    AuthAlgorithm,
+    CipherType,
+    IfaceStatus,
 )
 from pywifi.profile import Profile
 
@@ -76,52 +63,52 @@ DOT11_MAC_ADDRESS = c_ubyte * 6
 native_wifi = windll.wlanapi
 
 status_dict = [
-    IFACE_INACTIVE,
-    IFACE_CONNECTED,
-    IFACE_CONNECTED,
-    IFACE_DISCONNECTED,
-    IFACE_DISCONNECTED,
-    IFACE_CONNECTING,
-    IFACE_CONNECTING,
+    IfaceStatus.INACTIVE,
+    IfaceStatus.CONNECTED,
+    IfaceStatus.CONNECTED,
+    IfaceStatus.DISCONNECTED,
+    IfaceStatus.DISCONNECTED,
+    IfaceStatus.CONNECTING,
+    IfaceStatus.CONNECTING,
     IFACE_CONNECTING,
 ]
 
-auth_value_to_str_dict = {AUTH_ALG_OPEN: "open", AUTH_ALG_SHARED: "shared"}
+auth_value_to_str_dict = {AuthAlgorithm.OPEN: "open", AuthAlgorithm.SHARED: "shared"}
 
-auth_str_to_value_dict = {"open": AUTH_ALG_OPEN, "shared": AUTH_ALG_SHARED}
+auth_str_to_value_dict = {"open": AuthAlgorithm.OPEN, "shared": AuthAlgorithm.SHARED}
 
 akm_str_to_value_dict = {
-    "NONE": AKM_TYPE_NONE,
-    "WPA": AKM_TYPE_WPA,
-    "WPAPSK": AKM_TYPE_WPAPSK,
-    "WPA2": AKM_TYPE_WPA2,
-    "WPA2PSK": AKM_TYPE_WPA2PSK,
-    "OTHER": AKM_TYPE_UNKNOWN,
+    "NONE": AkmType.NONE,
+    "WPA": AkmType.WPA,
+    "WPAPSK": AkmType.WPAPSK,
+    "WPA2": AkmType.WPA2,
+    "WPA2PSK": AkmType.WPA2PSK,
+    "OTHER": AkmType.UNKNOWN,
 }
 
 akm_value_to_str_dict = {
-    AKM_TYPE_NONE: "NONE",
-    AKM_TYPE_WPA: "WPA",
-    AKM_TYPE_WPAPSK: "WPAPSK",
-    AKM_TYPE_WPA2: "WPA2",
-    AKM_TYPE_WPA2PSK: "WPA2PSK",
-    AKM_TYPE_UNKNOWN: "OTHER",
+    AkmType.NONE: "NONE",
+    AkmType.WPA: "WPA",
+    AkmType.WPAPSK: "WPAPSK",
+    AkmType.WPA2: "WPA2",
+    AkmType.WPA2PSK: "WPA2PSK",
+    AkmType.UNKNOWN: "OTHER",
 }
 
 cipher_str_to_value_dict = {
-    "NONE": CIPHER_TYPE_NONE,
-    "WEP": CIPHER_TYPE_WEP,
-    "TKIP": CIPHER_TYPE_TKIP,
-    "AES": CIPHER_TYPE_CCMP,
-    "OTHER": CIPHER_TYPE_UNKNOWN,
+    "NONE": CipherType.NONE,
+    "WEP": CipherType.WEP,
+    "TKIP": CipherType.TKIP,
+    "AES": CipherType.CCMP,
+    "OTHER": CipherType.UNKNOWN,
 }
 
 cipher_value_to_str_dict = {
-    CIPHER_TYPE_NONE: "NONE",
-    CIPHER_TYPE_WEP: "WEP",
-    CIPHER_TYPE_TKIP: "TKIP",
-    CIPHER_TYPE_CCMP: "AES",
-    CIPHER_TYPE_UNKNOWN: "UNKNOWN",
+    CipherType.NONE: "NONE",
+    CipherType.WEP: "WEP",
+    CipherType.TKIP: "TKIP",
+    CipherType.CCMP: "AES",
+    CipherType.UNKNOWN: "UNKNOWN",
 }
 
 
@@ -298,8 +285,8 @@ class WifiUtil:
                     akm = self._get_akm(networks[i].dot11DefaultCipherAlgorithm)
                     auth_alg = self._get_auth_alg(networks[i].dot11DefaultAuthAlgorithm)
                 else:
-                    akm = [AKM_TYPE_NONE]
-                    auth_alg = [AUTH_ALG_OPEN]
+                    akm = [AkmType.NONE]
+                    auth_alg = [AuthAlgorithm.OPEN]
 
                 for j in range(bss_list.contents.dwNumberOfItems):
                     network = Profile()
@@ -341,7 +328,7 @@ class WifiUtil:
         profile_data = {}
         profile_data["ssid"] = params.ssid
 
-        if AKM_TYPE_NONE in params.akm:
+        if AkmType.NONE in params.akm:
             profile_data["auth"] = auth_value_to_str_dict[params.auth]
             profile_data["encrypt"] = "none"
         else:
@@ -372,7 +359,7 @@ class WifiUtil:
                     </authEncryption>
         """
 
-        if AKM_TYPE_NONE not in params.akm:
+        if AkmType.NONE not in params.akm:
             xml += """<sharedKey>
                         <keyType>passPhrase</keyType>
                         <protected>{protected}</protected>
@@ -451,12 +438,12 @@ class WifiUtil:
             profile.akm = []
             if auth not in akm_str_to_value_dict:
                 if auth not in auth_str_to_value_dict:
-                    profile.auth = AUTH_ALG_OPEN
+                    profile.auth = AuthAlgorithm.OPEN
                 else:
                     profile.auth = auth_str_to_value_dict[auth]
-                    profile.akm.append(AKM_TYPE_NONE)
+                    profile.akm.append(AkmType.NONE)
             else:
-                profile.auth = AUTH_ALG_OPEN
+                profile.auth = AuthAlgorithm.OPEN
                 profile.akm.append(akm_str_to_value_dict[auth])
 
             profile_list.append(profile)
@@ -739,17 +726,17 @@ class WifiUtil:
     def _get_auth_alg(self, auth_val: int) -> list[int]:
         auth_alg = []
         if auth_val in [1, 3, 4, 6, 7]:
-            auth_alg.append(AUTH_ALG_OPEN)
+            auth_alg.append(AuthAlgorithm.OPEN)
         elif auth_val == 2:
-            auth_alg.append(AUTH_ALG_SHARED)
+            auth_alg.append(AuthAlgorithm.SHARED)
 
         return auth_alg
 
     def _get_akm(self, akm_val: int) -> list[int]:
         akm: list[int] = []
-        if akm_val == AKM_TYPE_WPAPSK:
-            akm.append(AKM_TYPE_WPAPSK)
-        elif akm_val == AKM_TYPE_WPA2PSK:
-            akm.append(AKM_TYPE_WPA2PSK)
+        if akm_val == AkmType.WPAPSK:
+            akm.append(AkmType.WPAPSK)
+        elif akm_val == AkmType.WPA2PSK:
+            akm.append(AkmType.WPA2PSK)
 
         return akm
